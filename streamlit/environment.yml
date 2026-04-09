@@ -1,0 +1,8 @@
+# Streamlit in Snowflake — package environment
+name: san_jac_demo
+channels:
+  - snowflake
+dependencies:
+  - streamlit
+  - snowflake-snowpark-python
+  - pandas

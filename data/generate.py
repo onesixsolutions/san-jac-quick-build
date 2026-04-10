@@ -15,6 +15,7 @@ Scale: ~32,000 students | ~85K enrollments | ~250K course attempts
 
 import io
 import os
+import re
 import sys
 import random
 from datetime import date, timedelta
@@ -269,132 +270,104 @@ def gen_dim_program():
 
 
 def gen_dim_course():
-    # (prefix, number, title, sch, is_dev, area, is_gateway)
-    specs = [
-        # Developmental
-        ("MATH","0314","Foundations of Mathematics",           3,True, "Science & Mathematics",                             False),
-        ("MATH","0332","Foundations of Math Reasoning",        3,True, "Science & Mathematics",                             False),
-        ("ENGL","0305","Foundations of Writing",               3,True, "Arts, Humanities, Communications & Design",         False),
-        ("READ","0306","Foundations of Reading",               3,True, "Arts, Humanities, Communications & Design",         False),
-        # Math
-        ("MATH","1314","College Algebra",                      3,False,"Science & Mathematics",                             True),
-        ("MATH","1332","Contemporary Mathematics",             3,False,"Science & Mathematics",                             False),
-        ("MATH","1342","Elementary Statistics",                3,False,"Science & Mathematics",                             False),
-        ("MATH","1350","Fundamentals of Mathematics I",        3,False,"Science & Mathematics",                             False),
-        ("MATH","2413","Calculus I",                           4,False,"Science & Mathematics",                             False),
-        ("MATH","2414","Calculus II",                          4,False,"Science & Mathematics",                             False),
-        # English / Reading
-        ("ENGL","1301","Composition I",                        3,False,"Arts, Humanities, Communications & Design",         True),
-        ("ENGL","1302","Composition II",                       3,False,"Arts, Humanities, Communications & Design",         False),
-        ("ENGL","2322","British Literature I",                 3,False,"Arts, Humanities, Communications & Design",         False),
-        ("ENGL","2327","American Literature I",                3,False,"Arts, Humanities, Communications & Design",         False),
-        # Government / History
-        ("GOVT","2305","Federal Government",                   3,False,"Social & Behavioral Sciences",                      False),
-        ("GOVT","2306","Texas Government",                     3,False,"Social & Behavioral Sciences",                      False),
-        ("HIST","1301","United States History I",              3,False,"Social & Behavioral Sciences",                      False),
-        ("HIST","1302","United States History II",             3,False,"Social & Behavioral Sciences",                      False),
-        # Science
-        ("BIOL","1406","Biology I",                            4,False,"Science & Mathematics",                             False),
-        ("BIOL","1407","Biology II",                           4,False,"Science & Mathematics",                             False),
-        ("BIOL","2401","Anatomy & Physiology I",               4,False,"Science & Mathematics",                             False),
-        ("BIOL","2402","Anatomy & Physiology II",              4,False,"Science & Mathematics",                             False),
-        ("CHEM","1411","General Chemistry I",                  4,False,"Science & Mathematics",                             False),
-        ("CHEM","1412","General Chemistry II",                 4,False,"Science & Mathematics",                             False),
-        ("PHYS","1401","General Physics I",                    4,False,"Science & Mathematics",                             False),
-        # Social / Behavioral
-        ("PSYC","2301","General Psychology",                   3,False,"Social & Behavioral Sciences",                      False),
-        ("PSYC","2314","Lifespan Development",                 3,False,"Social & Behavioral Sciences",                      False),
-        ("SOCI","1301","Introduction to Sociology",            3,False,"Social & Behavioral Sciences",                      False),
-        ("SOCI","1306","Social Problems",                      3,False,"Social & Behavioral Sciences",                      False),
-        ("PHIL","1301","Introduction to Philosophy",           3,False,"Social & Behavioral Sciences",                      False),
-        ("KINE","1301","Foundation of Kinesiology",            3,False,"Social & Behavioral Sciences",                      False),
-        # Speech / Communications
-        ("SPCH","1311","Introduction to Speech Communication", 3,False,"Arts, Humanities, Communications & Design",         False),
-        ("COMM","1307","Introduction to Mass Communication",   3,False,"Arts, Humanities, Communications & Design",         False),
-        ("COMM","1316","Photography I",                        3,False,"Arts, Humanities, Communications & Design",         False),
-        # Arts / Music
-        ("ARTS","1301","Art Appreciation",                     3,False,"Arts, Humanities, Communications & Design",         False),
-        ("ARTS","1311","Design I",                             3,False,"Arts, Humanities, Communications & Design",         False),
-        ("MUSC","1300","Music Appreciation",                   3,False,"Arts, Humanities, Communications & Design",         False),
-        ("MUSC","1305","Music Theory I",                       3,False,"Arts, Humanities, Communications & Design",         False),
-        # Digital Media
-        ("IMED","1301","Web Design Tools",                     3,False,"Arts, Humanities, Communications & Design",         False),
-        ("IMED","1345","Interactive Digital Media I",          3,False,"Arts, Humanities, Communications & Design",         False),
-        ("IMED","2315","Web Design II",                        3,False,"Arts, Humanities, Communications & Design",         False),
-        # Business
-        ("BUSI","1301","Business Principles",                  3,False,"Business",                                          False),
-        ("ACCT","2301","Principles of Accounting I",           3,False,"Business",                                          False),
-        ("ACCT","2302","Principles of Accounting II",          3,False,"Business",                                          False),
-        ("MKTG","1311","Principles of Marketing",              3,False,"Business",                                          False),
-        ("MGMT","1370","Principles of Management",             3,False,"Business",                                          False),
-        ("LGLA","1307","Introduction to Law",                  3,False,"Business",                                          False),
-        ("HRPO","2301","Human Resources Management",           3,False,"Business",                                          False),
-        ("BMGT","1327","Principles of Logistics",              3,False,"Business",                                          False),
-        ("IBUS","1305","Introduction to International Business",3,False,"Business",                                         False),
-        # Information Technology
-        ("ITSC","1301","Introduction to Computers",            3,False,"Information Technology",                            False),
-        ("ITSC","1325","Personal Computer Hardware",           3,False,"Information Technology",                            False),
-        ("ITSE","1302","Computer Programming",                 3,False,"Information Technology",                            False),
-        ("ITNW","1325","Fundamentals of Networking",           3,False,"Information Technology",                            False),
-        ("ITSY","1342","Information Technology Security I",    3,False,"Information Technology",                            False),
-        ("ITSE","2302","Data Structures",                      3,False,"Information Technology",                            False),
-        ("ITNW","1354","Implementing & Supporting Clients",    3,False,"Information Technology",                            False),
-        # Health Sciences
-        ("RNSG","1105","Introduction to Nursing",              1,False,"Health Sciences",                                   False),
-        ("RNSG","1413","Foundations of Nursing Practice",      4,False,"Health Sciences",                                   False),
-        ("RNSG","2221","Nursing in Mental Health",             2,False,"Health Sciences",                                   False),
-        ("RNSG","2362","Clinical - Registered Nursing",        3,False,"Health Sciences",                                   False),
-        ("DENA","1201","Introduction to Dental Assisting",     2,False,"Health Sciences",                                   False),
-        ("DENA","1341","Dental Materials",                     3,False,"Health Sciences",                                   False),
-        ("DHYG","1201","Preclinical Dental Hygiene",           2,False,"Health Sciences",                                   False),
-        ("RADR","1301","Introduction to Radiography",          3,False,"Health Sciences",                                   False),
-        ("RADR","1313","Principles of Radiographic Imaging",   3,False,"Health Sciences",                                   False),
-        ("RSPT","1329","Respiratory Care Fundamentals",        3,False,"Health Sciences",                                   False),
-        ("EMSP","1501","Emergency Medical Technician",         5,False,"Health Sciences",                                   False),
-        ("HITT","1305","Medical Terminology",                  3,False,"Health Sciences",                                   False),
-        ("HITT","1341","Coding and Classification Systems",    3,False,"Health Sciences",                                   False),
-        # Industrial / Technical
-        ("PTAC","1302","Introduction to Process Technology",   3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("PTAC","1420","Process Technology I - Equipment",     4,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("PTAC","2302","Process Technology II - Equipment",    3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("ELPT","1311","Introduction to Electrical Systems",   3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("ELPT","1341","Motor Controls I",                     3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("WLDG","1457","Introduction to Welding",              4,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("WLDG","1430","Shielded Metal Arc Welding",           4,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("AUMT","1305","Introduction to Automotive Technology",3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("AUMT","1316","Engine Repair",                        3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("MRNT","1301","Introduction to Maritime Transportation",3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("MRNT","1341","Vessel Operations",                    3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("MATR","1313","Introduction to Biomanufacturing",     3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("MATR","1411","Biomanufacturing Technology I",        4,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("HVAC","1345","Air Conditioning and Refrigeration I", 3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("CNBT","1302","Construction Technology",              3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        ("INTC","1305","Introduction to Instrumentation",      3,False,"Construction, Industry, Manufacturing & Transportation",False),
-        # Education
-        ("CDEC","1313","Child Development",                    3,False,"Education",                                         False),
-        ("CDEC","1356","Emergent Literacy for Early Childhood",3,False,"Education",                                         False),
-        ("EDUC","1301","Introduction to Teaching",             3,False,"Education",                                         False),
-        ("EDUC","2301","Introduction to Special Populations",  3,False,"Education",                                         False),
-        # Criminal Justice
-        ("CRIJ","1301","Introduction to Criminal Justice",     3,False,"Public Safety & Criminal Justice",                  False),
-        ("CRIJ","1307","Crime in America",                     3,False,"Public Safety & Criminal Justice",                  False),
-        ("CRIJ","2314","Criminal Investigation",               3,False,"Public Safety & Criminal Justice",                  False),
-    ]
+    """
+    Load real SJC courses from docs/course-catalog.md (1,695 courses).
+    Parses the scraped catalog markdown and maps each prefix to one of SJC's
+    8 areas of study.
+    """
+    catalog_path = Path(__file__).parent.parent / "docs" / "course-catalog.md"
 
+    # Prefix → SJC area of study
+    PREFIX_AREA = {
+        **{p: "Arts, Humanities, Communications & Design" for p in [
+            "ARTC","ARTS","ARTV","CHIN","COMM","DANC","DNCE","DRAM",
+            "ENGL","ESOL","ETWR","FREN","GERM","HUMA",
+            "MUEN","MUAP","MUSB","MUSC","MUSI","PHTC","SGNL","SPAN",
+        ]},
+        **{p: "Business" for p in [
+            "ACCT","ACNT","BMGT","BUSI","BUSG","ENTR","HAMG",
+            "HRPO","IBUS","LMGT","MRKG","POFI","POFM","POFT","RELE",
+        ]},
+        **{p: "Construction, Industry, Manufacturing & Transportation" for p in [
+            "ARCE","AUMT","CNBT","CETT","DEMR","DFTG","EECT","ELMT",
+            "ELPT","ENER","ENTC","HART","INCR","INTC","INMT",
+            "MARA","MFGT","NAUT","PFPB","PTAC","PTRT","CTEC","RBPT","RBTC","WLDG",
+        ]},
+        **{p: "Education" for p in [
+            "BCIS","CDEC","EDEC","EDEL","EDLL","EDTP","EDUC","TECA",
+        ]},
+        **{p: "Health Sciences" for p in [
+            "BIOM","BITC","BARB","CSME","CTMT","DAAC","DMSO","EMSP","EPCT",
+            "HITT","HPRS","LTCA","MAMT","MDCA","MLAB","METL","MRIT","MSSG",
+            "NDTE","NURS","OPTS","OSHT","OTHA","PHRA","PLAB","PMHS",
+            "PSYT","PTHA","QCTC","RADR","RNSG","RSPT","SCWK","SRGT","VNSG",
+        ]},
+        **{p: "Information Technology" for p in [
+            "COSC","CSIS","CYBR","GAME","IMED","INEW",
+            "ITAI","ITCC","ITCS","ITNW","ITSC","ITSE","ITSW","ITSY",
+        ]},
+        **{p: "Public Safety & Criminal Justice" for p in [
+            "CJCR","CJLE","CJSA","CRIJ","FIRS","FIRT","LGLA",
+        ]},
+        **{p: "Science & Mathematics" for p in [
+            "ANTH","ASTR","BIOL","CHEM","ENGR","GEOG","GEOL",
+            "GUST","INRW","MATH","PHYS","PHED","READ","SCIT","TECM",
+        ]},
+        **{p: "Social & Behavioral Sciences" for p in [
+            "ECON","GOVT","HIST","INDS","PHIL","PSYC","SOCI","SPCH",
+        ]},
+    }
+
+    # High-value gateway courses for the demo (used in pathway/completion metrics)
+    GATEWAY_COURSES = {
+        "ENGL-1301","MATH-1314","MATH-1332","MATH-1342",
+        "GOVT-2305","HIST-1301","SPCH-1311","BIOL-1406",
+    }
+
+    # Parse markdown: **PREFIX NNNN** — Title | N Credit(s), N Lec, N Lab
+    course_re = re.compile(
+        r'^\*\*([A-Z]{2,5})\s+(\d{4}[A-Z]?)\*\*\s*\u2014\s*([^|]+?)\s*\|\s*(\d+)\s*Credits?',
+        re.MULTILINE,
+    )
+
+    text = catalog_path.read_text(encoding="utf-8")
     rows = []
-    for s in specs:
-        prefix, number, title, sch, is_dev, area, is_gw = s
+    seen: set[str] = set()
+
+    for m in course_re.finditer(text):
+        prefix = m.group(1)
+        number = m.group(2)
+        title  = m.group(3).strip()
+        sch    = int(m.group(4))
+        cid    = f"{prefix}-{number}"
+
+        if cid in seen:
+            continue
+        seen.add(cid)
+
+        # Developmental: course number starts with 0, or labeled "College Prep"
+        is_dev = number.startswith("0")
+        if not is_dev:
+            # Check the block following this match for Course Type tag
+            block_end = text.find("\n\n", m.end())
+            block = text[m.end(): block_end if block_end != -1 else m.end() + 600]
+            if "Course Type: College Prep" in block:
+                is_dev = True
+
+        area = PREFIX_AREA.get(prefix, "General Education")
+
         rows.append({
-            "course_id":       f"{prefix}-{number}",
-            "course_prefix":   prefix,
-            "course_number":   number,
-            "course_title":    title,
-            "sch_value":       sch,
-            "course_level":    "Developmental" if is_dev else "College-Level",
-            "area_of_study":   area,
-            "is_gateway":      is_gw,
-            "is_developmental":is_dev,
+            "course_id":        cid,
+            "course_prefix":    prefix,
+            "course_number":    number,
+            "course_title":     title,
+            "sch_value":        sch,
+            "course_level":     "Developmental" if is_dev else "College-Level",
+            "area_of_study":    area,
+            "is_gateway":       cid in GATEWAY_COURSES,
+            "is_developmental": is_dev,
         })
+
     df = pd.DataFrame(rows).drop_duplicates(subset="course_id")
     return save(df, "dim_course")
 

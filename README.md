@@ -1,12 +1,16 @@
 # San Jac Quick Build — Snowflake Cortex Demo (Higher Ed)
 
-**Version:** 0.5.0
+**Version:** 0.6.0
 
 Rapid demo assets for showcasing Snowflake Cortex AI capabilities at San Jacinto College (Pasadena, TX). Grounded in real SJC demographics, student lifecycle stages, program catalog, and institutional success metrics.
 
 ---
 
 ## Changelog
+
+### v0.6.0 — 2026-04-10
+- Added `docs/course-catalog.md` — 1,695 real SJC courses scraped from publications.sanjac.edu (2026-2027 catalog), including descriptions, prerequisites, credit hours, and course type; primary Cortex Search document for course/program Q&A
+- Added `data/scrape_catalog.py` — scraper script that produces course-catalog.md; re-run to refresh when catalog updates
 
 ### v0.5.0 — 2026-04-09
 - Corrected Cortex Code description in README — it is Snowflake's native AI coding agent (not a data generation tool)
@@ -53,6 +57,7 @@ Rapid demo assets for showcasing Snowflake Cortex AI capabilities at San Jacinto
 | `student-success-metrics.md` | Entering/Continuing/Completing/Achieving metrics framework |
 | `student-lifecycle.md` | TargetX student stages, Banner integration, data field mapping |
 | `programs-catalog.md` | Full credit program list + CPD division by center |
+| `course-catalog.md` | 1,695 real SJC courses — descriptions, prerequisites, SCH (Cortex Search source) |
 | `use-cases/` | Individual use case briefs (8 total) |
 
 ### use-cases/

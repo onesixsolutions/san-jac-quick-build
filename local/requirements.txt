@@ -1,8 +1,0 @@
-snowflake-snowpark-python
-snowflake-connector-python[pandas]
-python-dotenv
-pandas
-jupyter
-ipykernel
-pyyaml
-requests

@@ -15,11 +15,11 @@ San Jacinto College tracks students through a defined set of stages in TargetX (
 | **Not Interested** | Submitted an application but withdrew interest; Banner application decision = "Student Withdrawal" | Record-Triggered |
 | **Admitted** | Met all checklist items (TSI, meningitis docs, NSO) AND has an **active** MF hold with end date 12/31/2099 | Record-Triggered |
 | **Eligible to Register – New** | Met all checklist items (TSI, meningitis docs, NSO) AND has an **inactive** MF hold with end date today or past | Record-Triggered |
-| **Register Pending** | Has current or future academic profile (registered for classes) but **no payment** for the term | Record-Triggered |
-| **Eligible to Register – Continuing** | Previously enrolled but not enrolled in a current or future term; can remain in this stage up to 3 terms | Date-Based |
+| **Register Pending** | Has current or future academic profile (registered for classes) but **no payment** for the academic period | Record-Triggered |
+| **Eligible to Register – Continuing** | Previously enrolled but not enrolled in a current or future academic period; can remain in this stage up to 3 academic periods | Date-Based |
 | **Enrolled** | Registered for classes AND payment complete (paid in full, payment plan, or authorized financial aid) | Record-Triggered |
 | **Graduate / Alumni** | Awarded a credential | Record-Triggered |
-| **Stop-Out** | Has course history but has not enrolled in the last 3 terms | Date-Based |
+| **Stop-Out** | Has course history but has not enrolled in the last 3 academic periods | Date-Based |
 | **Recruit Backs** | Was in "Eligible to Register – New" but never progressed past that stage | Date-Based |
 
 ---
@@ -64,8 +64,8 @@ Enrolled
 Graduate / Alumni
     
 Re-enrollment path:
-Eligible to Register – Continuing (up to 3 terms out)
-    ↓ (after 3 terms)
+Eligible to Register – Continuing (up to 3 academic periods out)
+    ↓ (after 3 academic periods)
 Stop-Out
 ```
 

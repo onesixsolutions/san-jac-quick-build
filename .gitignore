@@ -20,3 +20,9 @@ connections.toml
 
 # macOS
 .DS_Store
+
+# Generated data (run data/generate.py locally)
+data/output/
+
+# Claude Code session files
+.claude/

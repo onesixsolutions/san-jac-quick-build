@@ -7,14 +7,14 @@ San Jacinto tracks Pathway Consistency, Pathway Efficiency, and Pathway Velocity
 Cortex Analyst over enrollment and SCH data lets advisors ask natural language questions about pathway progress. A Snowpark ML model scores completion risk based on pathway velocity (SCH on-path ÷ SCH required) and flags students for proactive intervention. Results surface in the Streamlit advisor app.
 
 ## Demo Questions (Cortex Analyst)
-- "Which students in the Logistics AAS program are completing less than 60% of their required pathway credits each semester?"
+- "Which students in the Logistics AAS academic program are completing less than 60% of their required pathway credits each academic period?"
 - "What is the average pathway velocity for students in the Process Technology program compared to last year?"
 - "Show me students who changed their major more than once in the past 12 months"
 
 ## Key Metrics
 - **Pathway Efficiency** = SCH on-path attempted/completed ÷ total SCH attempted
 - **Pathway Velocity** = SCH on-path ÷ total SCH required for completion
-- **Pathway Consistency** = % of students maintaining their declared program within one year
+- **Pathway Consistency** = % of students maintaining their declared academic program within one year
 
 ## Data Sources
 - Banner enrollment records (SCH attempted, SCH completed, program code)

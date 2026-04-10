@@ -7,9 +7,9 @@
 Cortex Analyst over Banner financial aid and enrollment data allows Financial Aid staff and advisors to ask natural language questions about aid gaps, payment holds, and at-risk students. Cortex Search over financial aid policy documents allows students and advisors to quickly find answers to aid questions without calling the financial aid office.
 
 ## Demo Questions (Cortex Analyst)
-- "How many students in 'Register Pending' status have no financial aid package for this term?"
-- "What percentage of Pell-eligible applicants did not complete enrollment this semester?"
-- "Show me students with unmet financial need who are in their first term"
+- "How many students in 'Register Pending' status have no financial aid package for this academic period?"
+- "What percentage of Pell-eligible applicants did not complete enrollment this academic period?"
+- "Show me students with unmet financial need who are in their first academic period"
 
 ## Demo Questions (Cortex Search)
 - "What is the process for a financial aid appeal at San Jacinto?"

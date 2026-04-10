@@ -20,10 +20,10 @@ San Jacinto College tracks student success across four phases of the student exp
 
 | Metric | Description |
 |--------|-------------|
-| **Pathway Consistency** | % of students who maintain their selected program within one year (inverse of major-changers) |
-| **Pathway Efficiency** | SCH attempted/completed in pathway ÷ total SCH attempted in the semester |
+| **Pathway Consistency** | % of students who maintain their selected academic program within one year (inverse of major-changers) |
+| **Pathway Efficiency** | SCH attempted/completed in pathway ÷ total SCH attempted in the academic period |
 | **Pathway Velocity** | SCH attempted/completed in pathway ÷ total SCH required for completion |
-| **Student Success (A–C)** | % of students earning A–C in courses; includes First Term GPA and Program Learning Outcomes |
+| **Student Success (A–C)** | % of students earning A–C in courses; includes first academic period GPA and Program Learning Outcomes |
 | **Student Retention** | % of students who complete courses (inverse = Withdrawal Rate) |
 | **Student Persistence** | Enrollment in subsequent semesters: Fall-to-Fall and Fall-to-Spring |
 
@@ -71,7 +71,7 @@ San Jacinto College tracks student success across four phases of the student exp
 
 | Metric | Description |
 |--------|-------------|
-| **Favorable Outcomes** | All credential-seeking students who persisted semester-to-semester, graduated, OR transferred |
+| **Favorable Outcomes** | All credential-seeking students who persisted period-to-period, graduated, OR transferred |
 
 ---
 

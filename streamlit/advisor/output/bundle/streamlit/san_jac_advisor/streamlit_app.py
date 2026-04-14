@@ -174,7 +174,7 @@ for msg in st.session_state.messages:
             with st.expander("Generated SQL"):
                 st.code(msg["sql"], language="sql")
             if msg.get("dataframe") is not None:
-                st.dataframe(msg["dataframe"], use_container_width=True)
+                st.dataframe(msg["dataframe"], hide_index=True, use_container_width=True)
         elif msg.get("sources"):
             st.write(msg["content"])
             with st.expander(f"Sources ({len(msg['sources'])} documents)"):
@@ -247,7 +247,7 @@ if (
                 with st.expander("Generated SQL"):
                     st.code(sql_query, language="sql")
             if result_df is not None and not result_df.empty:
-                st.dataframe(result_df, use_container_width=True)
+                st.dataframe(result_df, hide_index=True, use_container_width=True)
                 if len(result_df.columns) >= 2 and len(result_df) > 1:
                     numeric_cols = result_df.select_dtypes(include="number").columns.tolist()
                     if numeric_cols:

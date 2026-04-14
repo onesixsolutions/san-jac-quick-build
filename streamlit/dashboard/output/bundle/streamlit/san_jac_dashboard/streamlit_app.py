@@ -150,7 +150,7 @@ with tab_kpi:
     LIMIT 15
     """
     prog = session.sql(prog_sql).to_pandas()
-    st.dataframe(prog, use_container_width=True)
+    st.dataframe(prog, hide_index=True, use_container_width=True)
 
 
 # ════════════════════════════════════════
@@ -171,7 +171,7 @@ with tab_analyst:
                 with st.expander("Generated SQL"):
                     st.code(msg["sql"], language="sql")
             if msg.get("dataframe") is not None:
-                st.dataframe(msg["dataframe"], use_container_width=True)
+                st.dataframe(msg["dataframe"], hide_index=True, use_container_width=True)
 
     # Suggestions
     ANALYST_SUGGESTIONS = [
@@ -232,7 +232,7 @@ with tab_analyst:
                 with st.expander("Generated SQL"):
                     st.code(sql_query, language="sql")
             if result_df is not None and not result_df.empty:
-                st.dataframe(result_df, use_container_width=True)
+                st.dataframe(result_df, hide_index=True, use_container_width=True)
                 if len(result_df.columns) >= 2 and len(result_df) > 1:
                     numeric_cols = result_df.select_dtypes(include="number").columns.tolist()
                     non_numeric = [c for c in result_df.columns if c not in numeric_cols]
@@ -277,7 +277,7 @@ with tab_lifecycle:
     st.markdown("**Stage Details**")
     display_df = lifecycle[["STAGE_NAME", "STUDENTS", "AVG_DAYS"]].copy()
     display_df.columns = ["Stage", "Students", "Avg. Days in Stage"]
-    st.dataframe(display_df, use_container_width=True)
+    st.dataframe(display_df, hide_index=True, use_container_width=True)
 
     # Stop-Out and Recruit-Back callouts
     col_so, col_rb = st.columns(2)

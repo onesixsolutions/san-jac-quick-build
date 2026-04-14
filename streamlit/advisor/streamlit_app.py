@@ -68,7 +68,7 @@ with st.sidebar:
     st.divider()
     if st.button("Clear Chat", use_container_width=True):
         st.session_state.messages = []
-        st.rerun()
+        st.experimental_rerun()
 
 
 # ── Session state ──
@@ -168,7 +168,7 @@ def query_analyst(query):
 
 # ── Display chat history ──
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=msg.get("avatar")):
+    with st.experimental_chat_message(msg["role"], avatar=msg.get("avatar")):
         if msg.get("sql"):
             st.write(msg["content"])
             with st.expander("Generated SQL"):
@@ -189,13 +189,13 @@ if not st.session_state.messages:
     selected = st.selectbox("Try asking:", [""] + list(suggestions.keys()), index=0, label_visibility="collapsed")
     if selected:
         st.session_state.messages.append({"role": "user", "content": selected})
-        st.rerun()
+        st.experimental_rerun()
 
 
 # ── Handle new input ──
-if prompt := st.chat_input("Ask a question about San Jacinto College..."):
+if prompt := st.experimental_chat_input("Ask a question about San Jacinto College..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.rerun()
+    st.experimental_rerun()
 
 # ── Process last user message if unanswered ──
 if (
@@ -205,7 +205,7 @@ if (
     user_msg = st.session_state.messages[-1]["content"]
 
     # Generate response
-    with st.chat_message("assistant", avatar="🎓"):
+    with st.experimental_chat_message("assistant", avatar="🎓"):
         if mode == "Catalog & Policy Search":
             with st.spinner("Searching catalog..."):
                 results = search_catalog(

@@ -165,7 +165,7 @@ with tab_analyst:
 
     # Display history
     for msg in st.session_state.analyst_messages:
-        with st.chat_message(msg["role"]):
+        with st.experimental_chat_message(msg["role"]):
             st.write(msg["content"])
             if msg.get("sql"):
                 with st.expander("Generated SQL"):
@@ -184,11 +184,11 @@ with tab_analyst:
         selected = st.selectbox("Try asking:", [""] + ANALYST_SUGGESTIONS, index=0, label_visibility="collapsed")
         if selected:
             st.session_state.analyst_messages.append({"role": "user", "content": selected})
-            st.rerun()
+            st.experimental_rerun()
 
-    if prompt := st.chat_input("Ask about student data...", key="analyst_input"):
+    if prompt := st.experimental_chat_input("Ask about student data...", key="analyst_input"):
         st.session_state.analyst_messages.append({"role": "user", "content": prompt})
-        st.rerun()
+        st.experimental_rerun()
 
     # Process last unanswered message
     if (
@@ -197,7 +197,7 @@ with tab_analyst:
     ):
         user_msg = st.session_state.analyst_messages[-1]["content"]
 
-        with st.chat_message("assistant"):
+        with st.experimental_chat_message("assistant"):
             with st.spinner("Analyzing..."):
                 analyst_sql = f"""
                 SELECT SNOWFLAKE.CORTEX.ANALYST(

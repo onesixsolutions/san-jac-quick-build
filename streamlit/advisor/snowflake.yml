@@ -1,0 +1,12 @@
+definition_version: 2
+entities:
+  san_jac_advisor:
+    type: streamlit
+    identifier:
+      name: SAN_JAC_ADVISOR
+      database: SAN_JAC_DEMO
+      schema: CORTEX
+    query_warehouse: SAN_JAC_WH
+    main_file: streamlit_app.py
+    artifacts:
+      - streamlit_app.py

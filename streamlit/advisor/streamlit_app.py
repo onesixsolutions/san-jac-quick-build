@@ -127,7 +127,7 @@ Question: {query}
 Answer:"""
 
     from snowflake.cortex import complete
-    return complete(LLM_MODEL, prompt, session=session, stream=True)
+    return complete(LLM_MODEL, prompt, session=session)
 
 
 # ── Cortex Analyst function ──
@@ -214,7 +214,8 @@ if (
                 )
 
             if results:
-                response = st.write_stream(generate_search_answer(user_msg, results))
+                response = generate_search_answer(user_msg, results)
+                st.write(response)
                 sources = [
                     {
                         "title": r.get("DOC_TITLE", "Unknown"),

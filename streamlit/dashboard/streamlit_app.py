@@ -53,7 +53,7 @@ def campus_filter(alias="e", campus_col="CAMPUS_ID"):
 
 # ── Tab layout ──
 tab_kpi, tab_analyst, tab_lifecycle = st.tabs(
-    [":chart_with_upwards_trend: KPI Overview", ":speech_balloon: Ask the Data", ":busts_in_silhouette: Student Lifecycle"]
+    ["📈 KPI Overview", "💬 Ask the Data", "👥 Student Lifecycle"]
 )
 
 # ════════════════════════════════════════

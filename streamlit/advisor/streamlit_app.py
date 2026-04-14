@@ -168,7 +168,9 @@ def query_analyst(query):
 
 # ── Display chat history ──
 for msg in st.session_state.messages:
-    with st.experimental_chat_message(msg["role"], avatar=msg.get("avatar")):
+    if msg["role"] == "user":
+        st.markdown(f"**You:** {msg['content']}")
+    else:
         if msg.get("sql"):
             st.write(msg["content"])
             with st.expander("Generated SQL"):
@@ -193,7 +195,10 @@ if not st.session_state.messages:
 
 
 # ── Handle new input ──
-if prompt := st.experimental_chat_input("Ask a question about San Jacinto College..."):
+with st.form("chat_form", clear_on_submit=True):
+    prompt = st.text_input("", label_visibility="collapsed", placeholder="Ask a question about San Jacinto College...")
+    submitted = st.form_submit_button("Send", use_container_width=True)
+if submitted and prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.experimental_rerun()
 
@@ -205,7 +210,7 @@ if (
     user_msg = st.session_state.messages[-1]["content"]
 
     # Generate response
-    with st.experimental_chat_message("assistant", avatar="🎓"):
+    with st.container():
         if mode == "Catalog & Policy Search":
             with st.spinner("Searching catalog..."):
                 results = search_catalog(

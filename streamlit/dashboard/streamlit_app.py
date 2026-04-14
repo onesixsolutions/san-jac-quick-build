@@ -165,7 +165,9 @@ with tab_analyst:
 
     # Display history
     for msg in st.session_state.analyst_messages:
-        with st.experimental_chat_message(msg["role"]):
+        if msg["role"] == "user":
+            st.markdown(f"**You:** {msg['content']}")
+        else:
             st.write(msg["content"])
             if msg.get("sql"):
                 with st.expander("Generated SQL"):
@@ -186,7 +188,10 @@ with tab_analyst:
             st.session_state.analyst_messages.append({"role": "user", "content": selected})
             st.experimental_rerun()
 
-    if prompt := st.experimental_chat_input("Ask about student data...", key="analyst_input"):
+    with st.form("analyst_form", clear_on_submit=True):
+        prompt = st.text_input("", label_visibility="collapsed", placeholder="Ask about enrollment, success rates, financial aid...")
+        submitted = st.form_submit_button("Send", use_container_width=True)
+    if submitted and prompt:
         st.session_state.analyst_messages.append({"role": "user", "content": prompt})
         st.experimental_rerun()
 
@@ -197,7 +202,7 @@ with tab_analyst:
     ):
         user_msg = st.session_state.analyst_messages[-1]["content"]
 
-        with st.experimental_chat_message("assistant"):
+        with st.container():
             with st.spinner("Analyzing..."):
                 analyst_sql = f"""
                 SELECT SNOWFLAKE.CORTEX.ANALYST(

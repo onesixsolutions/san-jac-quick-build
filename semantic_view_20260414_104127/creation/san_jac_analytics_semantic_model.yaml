@@ -1,0 +1,916 @@
+name: san_jac_analytics
+description: San Jacinto College student analytics model covering credit enrollment,
+  course success, financial aid, student lifecycle (TargetX CRM stages), continuing
+  professional development (CPD), and demographic analysis. San Jacinto College is
+  a large Hispanic-Serving Institution (HSI) in the Houston, Texas area with approximately
+  31,800 credit students across 5 campuses. The model uses a star schema with 8 dimension
+  tables and 5 fact tables. Key metrics include enrollment headcount, full-time rate
+  (33.8%), A-C course success rate (~72%), withdrawal rate (~12%), Pell eligibility
+  (56%), Hispanic enrollment (63.3%), and CPD completion rates.
+tables:
+  - name: DIM_STUDENT
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_STUDENT
+    primary_key:
+      columns:
+        - STUDENT_ID
+    dimensions:
+      - name: STUDENT_ID
+        expr: STUDENT_ID
+        data_type: VARCHAR
+      - name: FIRST_NAME
+        expr: FIRST_NAME
+        data_type: VARCHAR
+      - name: LAST_NAME
+        expr: LAST_NAME
+        data_type: VARCHAR
+      - name: GENDER
+        expr: GENDER
+        data_type: VARCHAR
+      - name: ETHNICITY
+        expr: ETHNICITY
+        data_type: VARCHAR
+        description: Student race/ethnicity. San Jacinto College is a Hispanic-Serving
+          Institution with ~63% Hispanic enrollment. Values include Hispanic, White,
+          Black, Asian, Two or More Races, etc.
+      - name: AGE_AT_FIRST_ENROLLMENT
+        expr: AGE_AT_FIRST_ENROLLMENT
+        data_type: NUMBER
+      - name: ZIP_CODE
+        expr: ZIP_CODE
+        data_type: VARCHAR
+      - name: STATE
+        expr: STATE
+        data_type: VARCHAR
+      - name: PELL_ELIGIBLE
+        expr: PELL_ELIGIBLE
+        data_type: BOOLEAN
+        description: Whether the student qualifies for Federal Pell Grant based on
+          financial need. About 56% of San Jac students are Pell-eligible.
+      - name: FIRST_GEN_COLLEGE
+        expr: FIRST_GEN_COLLEGE
+        data_type: BOOLEAN
+        description: Whether the student is the first in their family to attend college.
+      - name: HIGH_SCHOOL_DISTRICT
+        expr: HIGH_SCHOOL_DISTRICT
+        data_type: VARCHAR
+      - name: DUAL_CREDIT
+        expr: DUAL_CREDIT
+        data_type: BOOLEAN
+        description: Whether the student was enrolled as a dual-credit high school student.
+      - name: TSI_MATH_EXEMPT
+        expr: TSI_MATH_EXEMPT
+        data_type: BOOLEAN
+      - name: TSI_READING_EXEMPT
+        expr: TSI_READING_EXEMPT
+        data_type: BOOLEAN
+      - name: MENINGITIS_SUBMITTED
+        expr: MENINGITIS_SUBMITTED
+        data_type: BOOLEAN
+      - name: NSO_COMPLETE
+        expr: NSO_COMPLETE
+        data_type: BOOLEAN
+      - name: COHORT_TERM_ID
+        expr: COHORT_TERM_ID
+        data_type: VARCHAR
+      - name: PROGRAM_ID
+        expr: PROGRAM_ID
+        data_type: VARCHAR
+    time_dimensions:
+      - name: DOB
+        expr: DOB
+        data_type: DATE
+      - name: CREATED_DATE
+        expr: CREATED_DATE
+        data_type: DATE
+    facts:
+      - name: HS_GPA
+        expr: HS_GPA
+        data_type: NUMBER
+  - name: DIM_TERM
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_TERM
+    primary_key:
+      columns:
+        - TERM_ID
+    dimensions:
+      - name: TERM_ID
+        expr: TERM_ID
+        data_type: VARCHAR
+      - name: TERM_NAME
+        expr: TERM_NAME
+        data_type: VARCHAR
+      - name: TERM_SEASON
+        expr: TERM_SEASON
+        data_type: VARCHAR
+      - name: ACADEMIC_YEAR
+        expr: ACADEMIC_YEAR
+        data_type: VARCHAR
+      - name: IS_CURRENT_TERM
+        expr: IS_CURRENT_TERM
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: START_DATE
+        expr: START_DATE
+        data_type: DATE
+      - name: END_DATE
+        expr: END_DATE
+        data_type: DATE
+      - name: CENSUS_DATE
+        expr: CENSUS_DATE
+        data_type: DATE
+  - name: DIM_PROGRAM
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_PROGRAM
+    primary_key:
+      columns:
+        - PROGRAM_ID
+    foreign_keys:
+      - fkey_columns:
+          - CREDENTIAL_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_CREDENTIAL
+        pkey_columns:
+          - CREDENTIAL_ID
+    dimensions:
+      - name: PROGRAM_ID
+        expr: PROGRAM_ID
+        data_type: VARCHAR
+      - name: PROGRAM_NAME
+        expr: PROGRAM_NAME
+        data_type: VARCHAR
+      - name: CREDENTIAL_ID
+        expr: CREDENTIAL_ID
+        data_type: VARCHAR
+      - name: AREA_OF_STUDY
+        expr: AREA_OF_STUDY
+        data_type: VARCHAR
+      - name: IS_TRANSFER
+        expr: IS_TRANSFER
+        data_type: BOOLEAN
+      - name: IS_WORKFORCE
+        expr: IS_WORKFORCE
+        data_type: BOOLEAN
+      - name: IS_CRITICAL_FIELD
+        expr: IS_CRITICAL_FIELD
+        data_type: BOOLEAN
+      - name: SCH_REQUIRED
+        expr: SCH_REQUIRED
+        data_type: NUMBER
+      - name: TYPICAL_COMPLETION_SEMESTERS
+        expr: TYPICAL_COMPLETION_SEMESTERS
+        data_type: NUMBER
+      - name: LICENSURE_REQUIRED
+        expr: LICENSURE_REQUIRED
+        data_type: BOOLEAN
+      - name: CAMPUS_PRIMARY
+        expr: CAMPUS_PRIMARY
+        data_type: VARCHAR
+  - name: DIM_COURSE
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_COURSE
+    primary_key:
+      columns:
+        - COURSE_ID
+    dimensions:
+      - name: COURSE_ID
+        expr: COURSE_ID
+        data_type: VARCHAR
+      - name: COURSE_PREFIX
+        expr: COURSE_PREFIX
+        data_type: VARCHAR
+      - name: COURSE_NUMBER
+        expr: COURSE_NUMBER
+        data_type: VARCHAR
+      - name: COURSE_TITLE
+        expr: COURSE_TITLE
+        data_type: VARCHAR
+      - name: SCH_VALUE
+        expr: SCH_VALUE
+        data_type: NUMBER
+      - name: COURSE_LEVEL
+        expr: COURSE_LEVEL
+        data_type: VARCHAR
+      - name: AREA_OF_STUDY
+        expr: AREA_OF_STUDY
+        data_type: VARCHAR
+      - name: IS_GATEWAY
+        expr: IS_GATEWAY
+        data_type: BOOLEAN
+        description: Whether this is a gateway course - a high-enrollment foundational
+          course that is a leading indicator of student success and retention.
+      - name: IS_DEVELOPMENTAL
+        expr: IS_DEVELOPMENTAL
+        data_type: BOOLEAN
+        description: Whether this is a developmental (remedial) education course taken
+          by students who are not yet college-ready in that subject area.
+  - name: DIM_CAMPUS
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_CAMPUS
+    primary_key:
+      columns:
+        - CAMPUS_ID
+    dimensions:
+      - name: CAMPUS_ID
+        expr: CAMPUS_ID
+        data_type: VARCHAR
+      - name: CAMPUS_NAME
+        expr: CAMPUS_NAME
+        data_type: VARCHAR
+      - name: STREET
+        expr: STREET
+        data_type: VARCHAR
+      - name: CITY
+        expr: CITY
+        data_type: VARCHAR
+      - name: STATE
+        expr: STATE
+        data_type: VARCHAR
+  - name: DIM_STAGE
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_STAGE
+    primary_key:
+      columns:
+        - STAGE_ID
+    dimensions:
+      - name: STAGE_ID
+        expr: STAGE_ID
+        data_type: NUMBER
+      - name: STAGE_NAME
+        expr: STAGE_NAME
+        data_type: VARCHAR
+        description: TargetX CRM lifecycle stage name. Stages include Prospective,
+          Applicant, Admitted, Eligible to Register - New, Register Pending, Enrolled,
+          Eligible to Register - Continuing, Stop-Out, Graduate / Alumni, Not Interested.
+      - name: FLOW_TYPE
+        expr: FLOW_TYPE
+        data_type: VARCHAR
+      - name: IS_ACTIVE_STUDENT
+        expr: IS_ACTIVE_STUDENT
+        data_type: BOOLEAN
+      - name: SORT_ORDER
+        expr: SORT_ORDER
+        data_type: NUMBER
+  - name: DIM_CREDENTIAL
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_CREDENTIAL
+    primary_key:
+      columns:
+        - CREDENTIAL_ID
+    dimensions:
+      - name: CREDENTIAL_ID
+        expr: CREDENTIAL_ID
+        data_type: VARCHAR
+      - name: CREDENTIAL_TYPE
+        expr: CREDENTIAL_TYPE
+        data_type: VARCHAR
+      - name: CREDENTIAL_LEVEL
+        expr: CREDENTIAL_LEVEL
+        data_type: VARCHAR
+      - name: TRANSFER_ELIGIBLE
+        expr: TRANSFER_ELIGIBLE
+        data_type: BOOLEAN
+  - name: DIM_CPD_STUDENT
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: DIM_CPD_STUDENT
+    primary_key:
+      columns:
+        - CPD_STUDENT_ID
+    dimensions:
+      - name: CPD_STUDENT_ID
+        expr: CPD_STUDENT_ID
+        data_type: VARCHAR
+      - name: FIRST_NAME
+        expr: FIRST_NAME
+        data_type: VARCHAR
+      - name: LAST_NAME
+        expr: LAST_NAME
+        data_type: VARCHAR
+      - name: AGE
+        expr: AGE
+        data_type: NUMBER
+      - name: ZIP_CODE
+        expr: ZIP_CODE
+        data_type: VARCHAR
+      - name: EMPLOYER_NAME
+        expr: EMPLOYER_NAME
+        data_type: VARCHAR
+  - name: FACT_ENROLLMENT
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: FACT_ENROLLMENT
+    primary_key:
+      columns:
+        - ENROLLMENT_ID
+    foreign_keys:
+      - fkey_columns:
+          - STAGE_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_STAGE
+        pkey_columns:
+          - STAGE_ID
+      - fkey_columns:
+          - TERM_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_TERM
+        pkey_columns:
+          - TERM_ID
+    dimensions:
+      - name: ENROLLMENT_ID
+        expr: ENROLLMENT_ID
+        data_type: NUMBER
+      - name: STUDENT_ID
+        expr: STUDENT_ID
+        data_type: VARCHAR
+      - name: TERM_ID
+        expr: TERM_ID
+        data_type: VARCHAR
+      - name: PROGRAM_ID
+        expr: PROGRAM_ID
+        data_type: VARCHAR
+      - name: CAMPUS_ID
+        expr: CAMPUS_ID
+        data_type: VARCHAR
+      - name: STAGE_ID
+        expr: STAGE_ID
+        data_type: NUMBER
+      - name: ENROLLMENT_TYPE
+        expr: ENROLLMENT_TYPE
+        data_type: VARCHAR
+        description: Full-time (12+ SCH) or Part-time. About 33.8% of students are full-time.
+      - name: TOTAL_SCH_ATTEMPTED
+        expr: TOTAL_SCH_ATTEMPTED
+        data_type: NUMBER
+        description: Total semester credit hours (SCH) the student attempted in this term enrollment.
+      - name: TOTAL_SCH_COMPLETED
+        expr: TOTAL_SCH_COMPLETED
+        data_type: NUMBER
+        description: Total semester credit hours the student completed (passed) in this term.
+      - name: SCH_ON_PATHWAY
+        expr: SCH_ON_PATHWAY
+        data_type: NUMBER
+        description: Credit hours completed that count toward the student's declared program of study.
+      - name: IS_ONLINE_ONLY
+        expr: IS_ONLINE_ONLY
+        data_type: BOOLEAN
+      - name: HAS_SOME_ONLINE
+        expr: HAS_SOME_ONLINE
+        data_type: BOOLEAN
+      - name: PAYMENT_STATUS
+        expr: PAYMENT_STATUS
+        data_type: VARCHAR
+      - name: MF_HOLD_ACTIVE
+        expr: MF_HOLD_ACTIVE
+        data_type: BOOLEAN
+      - name: IS_FIRST_TERM
+        expr: IS_FIRST_TERM
+        data_type: BOOLEAN
+      - name: WITHDREW_TERM
+        expr: WITHDREW_TERM
+        data_type: BOOLEAN
+      - name: FINANCIAL_AID_TERM
+        expr: FINANCIAL_AID_TERM
+        data_type: BOOLEAN
+  - name: FACT_COURSE_ATTEMPT
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: FACT_COURSE_ATTEMPT
+    primary_key:
+      columns:
+        - ATTEMPT_ID
+    foreign_keys:
+      - fkey_columns:
+          - TERM_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_TERM
+        pkey_columns:
+          - TERM_ID
+    dimensions:
+      - name: ATTEMPT_ID
+        expr: ATTEMPT_ID
+        data_type: NUMBER
+      - name: STUDENT_ID
+        expr: STUDENT_ID
+        data_type: VARCHAR
+      - name: TERM_ID
+        expr: TERM_ID
+        data_type: VARCHAR
+      - name: COURSE_ID
+        expr: COURSE_ID
+        data_type: VARCHAR
+      - name: CAMPUS_ID
+        expr: CAMPUS_ID
+        data_type: VARCHAR
+      - name: SECTION_ID
+        expr: SECTION_ID
+        data_type: VARCHAR
+      - name: DELIVERY_MODE
+        expr: DELIVERY_MODE
+        data_type: VARCHAR
+        description: Course delivery method - Face-to-face, Online, or Hybrid.
+      - name: INSTRUCTOR_ID
+        expr: INSTRUCTOR_ID
+        data_type: VARCHAR
+      - name: GRADE
+        expr: GRADE
+        data_type: VARCHAR
+        description: Final letter grade (A, B, C, D, F, W, I, etc). Grades A-C are
+          considered academically successful.
+      - name: AC_SUCCESS
+        expr: AC_SUCCESS
+        data_type: BOOLEAN
+        description: Whether the student earned grade A, B, or C. The college-wide
+          A-C success rate is approximately 72%.
+      - name: WITHDREW
+        expr: WITHDREW
+        data_type: BOOLEAN
+        description: Whether the student withdrew from the course (grade W). The
+          college-wide withdrawal rate is approximately 12%.
+      - name: SCH_EARNED
+        expr: SCH_EARNED
+        data_type: NUMBER
+      - name: IS_DEVELOPMENTAL
+        expr: IS_DEVELOPMENTAL
+        data_type: BOOLEAN
+      - name: MIDTERM_GRADE
+        expr: MIDTERM_GRADE
+        data_type: VARCHAR
+    facts:
+      - name: GRADE_POINTS
+        expr: GRADE_POINTS
+        data_type: NUMBER
+      - name: ATTENDANCE_PCT
+        expr: ATTENDANCE_PCT
+        data_type: NUMBER
+  - name: FACT_FINANCIAL_AID
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: FACT_FINANCIAL_AID
+    primary_key:
+      columns:
+        - AID_ID
+    foreign_keys:
+      - fkey_columns:
+          - TERM_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_TERM
+        pkey_columns:
+          - TERM_ID
+    dimensions:
+      - name: AID_ID
+        expr: AID_ID
+        data_type: NUMBER
+      - name: STUDENT_ID
+        expr: STUDENT_ID
+        data_type: VARCHAR
+      - name: TERM_ID
+        expr: TERM_ID
+        data_type: VARCHAR
+      - name: AID_TYPE
+        expr: AID_TYPE
+        data_type: VARCHAR
+        description: Type of financial aid - Federal Pell Grant, Federal Loan, State Grant,
+          Institutional Scholarship, Work-Study, etc.
+      - name: DISBURSEMENT_STATUS
+        expr: DISBURSEMENT_STATUS
+        data_type: VARCHAR
+      - name: SATISFACTORY_ACADEMIC_PROGRESS
+        expr: SATISFACTORY_ACADEMIC_PROGRESS
+        data_type: BOOLEAN
+      - name: ENROLLMENT_INTENSITY_REQUIRED
+        expr: ENROLLMENT_INTENSITY_REQUIRED
+        data_type: NUMBER
+    facts:
+      - name: AID_AMOUNT_AWARDED
+        expr: AID_AMOUNT_AWARDED
+        data_type: NUMBER
+      - name: AID_AMOUNT_DISBURSED
+        expr: AID_AMOUNT_DISBURSED
+        data_type: NUMBER
+      - name: UNMET_NEED
+        expr: UNMET_NEED
+        data_type: NUMBER
+        description: Dollar amount of financial need remaining after all aid is applied.
+          Higher values indicate greater financial gap.
+      - name: CUMULATIVE_LOAN_BALANCE
+        expr: CUMULATIVE_LOAN_BALANCE
+        data_type: NUMBER
+  - name: FACT_STUDENT_STAGE_HISTORY
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: FACT_STUDENT_STAGE_HISTORY
+    primary_key:
+      columns:
+        - HISTORY_ID
+    foreign_keys:
+      - fkey_columns:
+          - STAGE_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_STAGE
+        pkey_columns:
+          - STAGE_ID
+      - fkey_columns:
+          - TERM_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_TERM
+        pkey_columns:
+          - TERM_ID
+    dimensions:
+      - name: HISTORY_ID
+        expr: HISTORY_ID
+        data_type: NUMBER
+      - name: STUDENT_ID
+        expr: STUDENT_ID
+        data_type: VARCHAR
+      - name: STAGE_ID
+        expr: STAGE_ID
+        data_type: NUMBER
+      - name: DAYS_IN_STAGE
+        expr: DAYS_IN_STAGE
+        data_type: NUMBER
+        description: Number of days the student spent in this lifecycle stage. NULL for
+          current/terminal stages (use DATEDIFF from STAGE_START_DATE to CURRENT_DATE).
+      - name: PREVIOUS_STAGE_ID
+        expr: PREVIOUS_STAGE_ID
+        data_type: NUMBER
+        description: The stage the student was in before transitioning to this stage.
+          Enables funnel and progression analysis.
+      - name: TRIGGER_TYPE
+        expr: TRIGGER_TYPE
+        data_type: VARCHAR
+        description: What triggered the stage transition - e.g. Application Submitted,
+          Enrollment Confirmed, Term End, Graduation, etc.
+      - name: TERM_ID
+        expr: TERM_ID
+        data_type: VARCHAR
+    time_dimensions:
+      - name: STAGE_START_DATE
+        expr: STAGE_START_DATE
+        data_type: DATE
+      - name: STAGE_END_DATE
+        expr: STAGE_END_DATE
+        data_type: DATE
+  - name: FACT_CPD_ENROLLMENT
+    base_table:
+      database: SAN_JAC_DEMO
+      schema: ANALYTICS
+      table: FACT_CPD_ENROLLMENT
+    primary_key:
+      columns:
+        - CPD_ENROLLMENT_ID
+    foreign_keys:
+      - fkey_columns:
+          - TERM_ID
+        pkey_table:
+          database: SAN_JAC_DEMO
+          schema: ANALYTICS
+          table: DIM_TERM
+        pkey_columns:
+          - TERM_ID
+    dimensions:
+      - name: CPD_ENROLLMENT_ID
+        expr: CPD_ENROLLMENT_ID
+        data_type: NUMBER
+      - name: CPD_STUDENT_ID
+        expr: CPD_STUDENT_ID
+        data_type: VARCHAR
+      - name: TERM_ID
+        expr: TERM_ID
+        data_type: VARCHAR
+      - name: COURSE_ID
+        expr: COURSE_ID
+        data_type: VARCHAR
+      - name: COURSE_NAME
+        expr: COURSE_NAME
+        data_type: VARCHAR
+      - name: CPD_CENTER
+        expr: CPD_CENTER
+        data_type: VARCHAR
+      - name: CAMPUS_ID
+        expr: CAMPUS_ID
+        data_type: VARCHAR
+      - name: DELIVERY_MODE
+        expr: DELIVERY_MODE
+        data_type: VARCHAR
+      - name: COMPLETION_STATUS
+        expr: COMPLETION_STATUS
+        data_type: VARCHAR
+        description: CPD course completion outcome - Completed, In Progress, Withdrew,
+          or No Show.
+      - name: SEAT_CAPACITY
+        expr: SEAT_CAPACITY
+        data_type: NUMBER
+      - name: GRANT_FUNDED
+        expr: GRANT_FUNDED
+        data_type: BOOLEAN
+        description: Whether the CPD enrollment is funded by a grant (e.g. workforce development grant).
+      - name: EMPLOYER_SPONSORED
+        expr: EMPLOYER_SPONSORED
+        data_type: BOOLEAN
+        description: Whether the student's employer is sponsoring the CPD enrollment.
+      - name: LINKED_TO_CREDIT
+        expr: LINKED_TO_CREDIT
+        data_type: BOOLEAN
+        description: Whether this CPD course has a pathway or articulation to credit-bearing coursework.
+    time_dimensions:
+      - name: ENROLLMENT_DATE
+        expr: ENROLLMENT_DATE
+        data_type: DATE
+relationships:
+  - name: DIM_PROGRAM_TO_DIM_CREDENTIAL
+    left_table: DIM_PROGRAM
+    right_table: DIM_CREDENTIAL
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: CREDENTIAL_ID
+        right_column: CREDENTIAL_ID
+  - name: FACT_COURSE_ATTEMPT_TO_DIM_COURSE
+    left_table: FACT_COURSE_ATTEMPT
+    right_table: DIM_COURSE
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: COURSE_ID
+        right_column: COURSE_ID
+  - name: FACT_COURSE_ATTEMPT_TO_DIM_STUDENT
+    left_table: FACT_COURSE_ATTEMPT
+    right_table: DIM_STUDENT
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: STUDENT_ID
+        right_column: STUDENT_ID
+  - name: FACT_COURSE_ATTEMPT_TO_DIM_TERM
+    left_table: FACT_COURSE_ATTEMPT
+    right_table: DIM_TERM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: TERM_ID
+        right_column: TERM_ID
+  - name: FACT_CPD_ENROLLMENT_TO_DIM_CAMPUS
+    left_table: FACT_CPD_ENROLLMENT
+    right_table: DIM_CAMPUS
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: CAMPUS_ID
+        right_column: CAMPUS_ID
+  - name: FACT_CPD_ENROLLMENT_TO_DIM_TERM
+    left_table: FACT_CPD_ENROLLMENT
+    right_table: DIM_TERM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: TERM_ID
+        right_column: TERM_ID
+  - name: FACT_ENROLLMENT_TO_DIM_CAMPUS
+    left_table: FACT_ENROLLMENT
+    right_table: DIM_CAMPUS
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: CAMPUS_ID
+        right_column: CAMPUS_ID
+  - name: FACT_ENROLLMENT_TO_DIM_PROGRAM
+    left_table: FACT_ENROLLMENT
+    right_table: DIM_PROGRAM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: PROGRAM_ID
+        right_column: PROGRAM_ID
+  - name: FACT_ENROLLMENT_TO_DIM_STAGE
+    left_table: FACT_ENROLLMENT
+    right_table: DIM_STAGE
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: STAGE_ID
+        right_column: STAGE_ID
+  - name: FACT_ENROLLMENT_TO_DIM_TERM
+    left_table: FACT_ENROLLMENT
+    right_table: DIM_TERM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: TERM_ID
+        right_column: TERM_ID
+  - name: FACT_FINANCIAL_AID_TO_DIM_TERM
+    left_table: FACT_FINANCIAL_AID
+    right_table: DIM_TERM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: TERM_ID
+        right_column: TERM_ID
+  - name: FACT_STUDENT_STAGE_HISTORY_TO_DIM_STAGE
+    left_table: FACT_STUDENT_STAGE_HISTORY
+    right_table: DIM_STAGE
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: STAGE_ID
+        right_column: STAGE_ID
+  - name: FACT_STUDENT_STAGE_HISTORY_TO_DIM_TERM
+    left_table: FACT_STUDENT_STAGE_HISTORY
+    right_table: DIM_TERM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: TERM_ID
+        right_column: TERM_ID
+  - name: DIM_STUDENT_TO_DIM_PROGRAM
+    left_table: DIM_STUDENT
+    right_table: DIM_PROGRAM
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: PROGRAM_ID
+        right_column: PROGRAM_ID
+  - name: FACT_COURSE_ATTEMPT_TO_DIM_CAMPUS
+    left_table: FACT_COURSE_ATTEMPT
+    right_table: DIM_CAMPUS
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: CAMPUS_ID
+        right_column: CAMPUS_ID
+  - name: FACT_CPD_ENROLLMENT_TO_DIM_CPD_STUDENT
+    left_table: FACT_CPD_ENROLLMENT
+    right_table: DIM_CPD_STUDENT
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: CPD_STUDENT_ID
+        right_column: CPD_STUDENT_ID
+  - name: FACT_ENROLLMENT_TO_DIM_STUDENT
+    left_table: FACT_ENROLLMENT
+    right_table: DIM_STUDENT
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: STUDENT_ID
+        right_column: STUDENT_ID
+  - name: FACT_FINANCIAL_AID_TO_DIM_STUDENT
+    left_table: FACT_FINANCIAL_AID
+    right_table: DIM_STUDENT
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: STUDENT_ID
+        right_column: STUDENT_ID
+  - name: FACT_STUDENT_STAGE_HISTORY_TO_DIM_STUDENT
+    left_table: FACT_STUDENT_STAGE_HISTORY
+    right_table: DIM_STUDENT
+    join_type: inner
+    relationship_type: many_to_one
+    relationship_columns:
+      - left_column: STUDENT_ID
+        right_column: STUDENT_ID
+verified_queries:
+  - name: enrollment_headcount_by_term
+    question: How many students are enrolled each term, and what is the full-time rate?
+    sql: SELECT t.TERM_NAME, COUNT(DISTINCT e.STUDENT_ID) AS enrolled_students, SUM(CASE
+      WHEN e.TOTAL_SCH_ATTEMPTED >= 12 THEN 1 ELSE 0 END) AS full_time_count, ROUND(full_time_count
+      * 100.0 / enrolled_students, 1) AS full_time_pct FROM fact_enrollment AS e JOIN
+      dim_term AS t ON e.TERM_ID = t.TERM_ID GROUP BY t.TERM_NAME ORDER BY t.TERM_NAME
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: demographic_breakdown
+    question: What is the demographic breakdown of students by ethnicity and gender?
+    sql: SELECT s.ETHNICITY, s.GENDER, COUNT(DISTINCT s.STUDENT_ID) AS student_count,
+      ROUND(student_count * 100.0 / SUM(student_count) OVER (), 1) AS pct FROM dim_student
+      AS s GROUP BY s.ETHNICITY, s.GENDER ORDER BY student_count DESC
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: course_success_by_term
+    question: What is the A-C course success rate and withdrawal rate by term?
+    sql: SELECT t.TERM_NAME, ROUND(SUM(CASE WHEN ca.AC_SUCCESS = TRUE THEN 1 ELSE
+      0 END) * 100.0 / COUNT(*), 1) AS success_rate, ROUND(SUM(CASE WHEN ca.WITHDREW
+      = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS withdrawal_rate FROM fact_course_attempt
+      AS ca JOIN dim_term AS t ON ca.TERM_ID = t.TERM_ID GROUP BY t.TERM_NAME ORDER
+      BY t.TERM_NAME
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: top_programs_current_term
+    question: Which programs have the most enrolled students in the current term and
+      what are their average completed credit hours?
+    sql: SELECT p.AREA_OF_STUDY, p.PROGRAM_NAME, COUNT(DISTINCT e.STUDENT_ID) AS enrolled,
+      ROUND(AVG(e.TOTAL_SCH_COMPLETED), 1) AS avg_sch_completed FROM fact_enrollment
+      AS e JOIN dim_program AS p ON e.PROGRAM_ID = p.PROGRAM_ID JOIN dim_term AS t
+      ON e.TERM_ID = t.TERM_ID WHERE t.IS_CURRENT_TERM = TRUE GROUP BY p.AREA_OF_STUDY,
+      p.PROGRAM_NAME ORDER BY enrolled DESC
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: financial_aid_by_type
+    question: How many students receive each type of financial aid, and what is the
+      average award amount and unmet need by aid type?
+    sql: SELECT fa.AID_TYPE, COUNT(DISTINCT fa.STUDENT_ID) AS recipients, ROUND(AVG(fa.AID_AMOUNT_AWARDED),
+      2) AS avg_awarded, ROUND(AVG(fa.UNMET_NEED), 2) AS avg_unmet_need FROM fact_financial_aid
+      AS fa GROUP BY fa.AID_TYPE ORDER BY recipients DESC
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: cpd_completion_by_campus
+    question: What are the continuing professional development enrollment counts and
+      completion rates by campus and center?
+    sql: SELECT c.CAMPUS_NAME, ce.CPD_CENTER, COUNT(*) AS enrollments, ROUND(SUM(CASE
+      WHEN ce.COMPLETION_STATUS = 'Completed' THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+      1) AS completion_rate FROM fact_cpd_enrollment AS ce JOIN dim_campus AS c ON
+      ce.CAMPUS_ID = c.CAMPUS_ID GROUP BY c.CAMPUS_NAME, ce.CPD_CENTER ORDER BY enrollments
+      DESC
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: pell_equity_gap
+    question: How do course success and withdrawal rates compare between Pell-eligible
+      and non-Pell students?
+    sql: SELECT s.PELL_ELIGIBLE, ROUND(SUM(CASE WHEN ca.AC_SUCCESS = TRUE THEN 1 ELSE
+      0 END) * 100.0 / COUNT(*), 1) AS success_rate, ROUND(SUM(CASE WHEN ca.WITHDREW
+      = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS withdrawal_rate FROM fact_course_attempt
+      AS ca JOIN dim_student AS s ON ca.STUDENT_ID = s.STUDENT_ID GROUP BY s.PELL_ELIGIBLE
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: campus_enrollment_by_term
+    question: What is the enrollment headcount and total credit hours attempted by
+      campus and term?
+    sql: SELECT c.CAMPUS_NAME, t.TERM_NAME, COUNT(DISTINCT e.STUDENT_ID) AS headcount,
+      SUM(e.TOTAL_SCH_ATTEMPTED) AS total_sch FROM fact_enrollment AS e JOIN dim_campus
+      AS c ON e.CAMPUS_ID = c.CAMPUS_ID JOIN dim_term AS t ON e.TERM_ID = t.TERM_ID
+      GROUP BY c.CAMPUS_NAME, t.TERM_NAME ORDER BY c.CAMPUS_NAME, t.TERM_NAME
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: gateway_course_success
+    question: What is the success rate for each gateway course ordered by enrollment
+      volume?
+    sql: SELECT co.COURSE_PREFIX, co.COURSE_TITLE, ROUND(SUM(CASE WHEN ca.AC_SUCCESS
+      = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS success_rate, COUNT(*) AS
+      attempts FROM fact_course_attempt AS ca JOIN dim_course AS co ON ca.COURSE_ID
+      = co.COURSE_ID WHERE co.IS_GATEWAY = TRUE GROUP BY co.COURSE_PREFIX, co.COURSE_TITLE
+      ORDER BY attempts DESC
+    verified_at: 1776178281
+    verified_by: Semantic Model Generator
+  - name: lifecycle_stage_distribution
+    question: How many students are in each lifecycle stage and how long have they been
+      there on average?
+    sql: SELECT ds.STAGE_NAME, COUNT(DISTINCT ssh.STUDENT_ID) AS students_in_stage,
+      COUNT(*) AS total_transitions, ROUND(AVG(COALESCE(ssh.DAYS_IN_STAGE, DATEDIFF('day',
+      ssh.STAGE_START_DATE, CURRENT_DATE()))), 1) AS avg_days_in_stage FROM fact_student_stage_history
+      AS ssh JOIN dim_stage AS ds ON ssh.STAGE_ID = ds.STAGE_ID GROUP BY ds.STAGE_NAME
+      ORDER BY ds.STAGE_NAME
+    verified_at: 1776178281
+    verified_by: CHRIS_HAMMER
+  - name: first_gen_success_gap
+    question: How do course success and withdrawal rates compare for first-generation
+      college students versus non-first-gen?
+    sql: SELECT s.FIRST_GEN_COLLEGE, COUNT(DISTINCT ca.STUDENT_ID) AS students,
+      ROUND(SUM(CASE WHEN ca.AC_SUCCESS = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+      1) AS success_rate, ROUND(SUM(CASE WHEN ca.WITHDREW = TRUE THEN 1 ELSE 0 END)
+      * 100.0 / COUNT(*), 1) AS withdrawal_rate FROM fact_course_attempt AS ca JOIN
+      dim_student AS s ON ca.STUDENT_ID = s.STUDENT_ID GROUP BY s.FIRST_GEN_COLLEGE
+    verified_at: 1776178281
+    verified_by: CHRIS_HAMMER
+  - name: delivery_mode_outcomes
+    question: What are the course success rates, withdrawal rates, and average attendance
+      by delivery mode (online, face-to-face, hybrid)?
+    sql: SELECT ca.DELIVERY_MODE, COUNT(*) AS attempts, ROUND(SUM(CASE WHEN ca.AC_SUCCESS
+      = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS success_rate, ROUND(SUM(CASE
+      WHEN ca.WITHDREW = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS withdrawal_rate,
+      ROUND(AVG(ca.ATTENDANCE_PCT), 1) AS avg_attendance FROM fact_course_attempt AS
+      ca GROUP BY ca.DELIVERY_MODE ORDER BY attempts DESC
+    verified_at: 1776178281
+    verified_by: CHRIS_HAMMER

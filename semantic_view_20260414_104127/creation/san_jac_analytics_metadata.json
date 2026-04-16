@@ -1,0 +1,36 @@
+{
+  "semantic_view_name": "SAN_JAC_ANALYTICS",
+  "target_database": "SAN_JAC_DEMO",
+  "target_schema": "CORTEX",
+  "request_id": "session_variable_lost_revalidate_needed",
+  "warnings": [
+    {
+      "message": "The query \"How many students are currently in each lifecycle stage and how long have they been there?\" is invalid. Please fix the SQL and try again."
+    }
+  ],
+  "errors": [],
+  "suggestions_applied": [
+    "DIM_STUDENT_TO_DIM_PROGRAM",
+    "FACT_COURSE_ATTEMPT_TO_DIM_CAMPUS",
+    "FACT_CPD_ENROLLMENT_TO_DIM_CPD_STUDENT",
+    "FACT_ENROLLMENT_TO_DIM_STUDENT",
+    "FACT_FINANCIAL_AID_TO_DIM_STUDENT",
+    "FACT_STUDENT_STAGE_HISTORY_TO_DIM_STUDENT"
+  ],
+  "suggestions_filtered": [],
+  "tables_included": [
+    "SAN_JAC_DEMO.ANALYTICS.DIM_STUDENT",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_TERM",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_PROGRAM",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_COURSE",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_CAMPUS",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_STAGE",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_CREDENTIAL",
+    "SAN_JAC_DEMO.ANALYTICS.DIM_CPD_STUDENT",
+    "SAN_JAC_DEMO.ANALYTICS.FACT_ENROLLMENT",
+    "SAN_JAC_DEMO.ANALYTICS.FACT_COURSE_ATTEMPT",
+    "SAN_JAC_DEMO.ANALYTICS.FACT_FINANCIAL_AID",
+    "SAN_JAC_DEMO.ANALYTICS.FACT_STUDENT_STAGE_HISTORY",
+    "SAN_JAC_DEMO.ANALYTICS.FACT_CPD_ENROLLMENT"
+  ]
+}

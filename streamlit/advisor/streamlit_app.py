@@ -7,14 +7,73 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Brand styles ──
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] > div:first-child {
+    background-color: #004c97;
+}
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] .stCaption {
+    color: #ffffff !important;
+}
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] h5 {
+    color: #ffc61e !important;
+}
+section[data-testid="stSidebar"] hr {
+    border-color: rgba(255,255,255,0.2) !important;
+}
+section[data-testid="stSidebar"] button {
+    background-color: #ffc61e !important;
+    color: #002142 !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+h1 { color: #004c97 !important; }
+h2, h3 { color: #002142 !important; }
+.chat-user {
+    background-color: #dfeaf4;
+    border-left: 4px solid #004c97;
+    padding: 0.6rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.5rem 0;
+    color: #002142;
+}
+.chat-assistant {
+    background-color: #fffbf0;
+    border-left: 4px solid #ffc61e;
+    padding: 0.6rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.5rem 0;
+    color: #002142;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── Snowflake connection ──
 from snowflake.snowpark.context import get_active_session
 session = get_active_session()
 
 # ── Constants ──
 SEARCH_SERVICE = "SAN_JAC_DEMO.CORTEX.SAN_JAC_SEARCH"
-SEMANTIC_VIEW = "SAN_JAC_DEMO.CORTEX.SAN_JAC_ANALYTICS"
+SEMANTIC_MODEL_FILE = "@SAN_JAC_DEMO.CORTEX.ANALYST_STAGE/san_jac_analytics_semantic_model.yaml"
+LOGO_STAGE_PATH = "@SAN_JAC_DEMO.CORTEX.ANALYST_STAGE/san_jac_logo.png"
 LLM_MODEL = "claude-3-5-sonnet"
+
+# ── Logo: load from stage, fall back to web ──
+def _load_logo():
+    import base64
+    try:
+        data = session.file.get_stream(LOGO_STAGE_PATH).read()
+        return "data:image/png;base64," + base64.b64encode(data).decode()
+    except Exception:
+        return "https://upload.wikimedia.org/wikipedia/en/a/ab/San_Jacinto_College.png"
+
+LOGO_SRC = _load_logo()
 
 SEARCH_SUGGESTIONS = {
     "What are the prerequisites for College Algebra?": "course lookup",
@@ -33,10 +92,12 @@ ANALYST_SUGGESTIONS = {
 # ── Sidebar ──
 with st.sidebar:
     st.markdown(
-        """
+        f"""
         <div style="text-align:center; padding: 1rem 0;">
+            <img src="{LOGO_SRC}"
+                 style="width:110px; margin-bottom:0.5rem;" alt="San Jacinto College logo">
             <h2 style="color: #ffc61e; margin-bottom: 0;">San Jacinto College</h2>
-            <p style="color: #dfeaf4; font-size: 0.85rem; margin-top: 0.25rem;">Your Goals. Your College.</p>
+            <p style="color: #ffffff; font-size: 0.85rem; margin-top: 0.25rem;">Your Goals. Your College.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -126,25 +187,33 @@ Question: {query}
 
 Answer:"""
 
-    from snowflake.cortex import complete
-    return complete(LLM_MODEL, prompt, session=session)
+    escaped_prompt = prompt.replace("'", "''")
+    result = session.sql(
+        f"SELECT SNOWFLAKE.CORTEX.COMPLETE('{LLM_MODEL}', '{escaped_prompt}') AS response"
+    ).collect()
+    return result[0]["RESPONSE"]
 
 
 # ── Cortex Analyst function ──
 def query_analyst(query):
-    sql = f"""
-    SELECT SNOWFLAKE.CORTEX.ANALYST(
-        '{SEMANTIC_VIEW}',
-        $${json.dumps([{{"role": "user", "content": [{{"type": "text", "text": query}}]}}])}$$
-    ) AS response
-    """
-    result = session.sql(sql).collect()
-    if not result:
-        return None, None, None
+    import _snowflake
+    resp = _snowflake.send_snow_api_request(
+        "POST",
+        "/api/v2/cortex/analyst/message",
+        {},
+        {},
+        {
+            "messages": [{"role": "user", "content": [{"type": "text", "text": query}]}],
+            "semantic_model_file": SEMANTIC_MODEL_FILE,
+        },
+        None,
+        30000,
+    )
 
-    response = json.loads(result[0]["RESPONSE"])
-    message = response.get("message", {})
-    content_items = message.get("content", [])
+    if resp["status"] >= 400:
+        return f"Cortex Analyst error ({resp['status']}): {resp['content']}", None, None
+
+    content_items = json.loads(resp["content"]).get("message", {}).get("content", [])
 
     text_parts = []
     sql_query = None
@@ -169,21 +238,21 @@ def query_analyst(query):
 # ── Display chat history ──
 for msg in st.session_state.messages:
     if msg["role"] == "user":
-        st.markdown(f"**You:** {msg['content']}")
+        st.markdown(f'<div class="chat-user"><strong>You</strong><br>{msg["content"]}</div>', unsafe_allow_html=True)
     else:
         if msg.get("sql"):
-            st.write(msg["content"])
+            st.markdown(f'<div class="chat-assistant">{msg["content"]}</div>', unsafe_allow_html=True)
             with st.expander("Generated SQL"):
                 st.code(msg["sql"], language="sql")
             if msg.get("dataframe") is not None:
                 st.dataframe(msg["dataframe"], use_container_width=True)
         elif msg.get("sources"):
-            st.write(msg["content"])
+            st.markdown(f'<div class="chat-assistant">{msg["content"]}</div>', unsafe_allow_html=True)
             with st.expander(f"Sources ({len(msg['sources'])} documents)"):
                 for src in msg["sources"]:
                     st.markdown(f"- **{src['title']}** ({src['type']}) — {src['file']}")
         else:
-            st.write(msg["content"])
+            st.markdown(f'<div class="chat-assistant">{msg["content"]}</div>', unsafe_allow_html=True)
 
 # ── Suggestion chips ──
 if not st.session_state.messages:

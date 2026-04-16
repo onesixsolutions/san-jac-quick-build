@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import pandas as pd
 
 st.set_page_config(
     page_title="San Jacinto College — Institutional Dashboard",
@@ -7,19 +8,62 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Brand styles ──
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] > div:first-child {
+    background-color: #004c97;
+}
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] .stCaption {
+    color: #ffffff !important;
+}
+section[data-testid="stSidebar"] h4,
+section[data-testid="stSidebar"] h5 {
+    color: #ffc61e !important;
+}
+section[data-testid="stSidebar"] hr {
+    border-color: rgba(255,255,255,0.2) !important;
+}
+h1 { color: #004c97 !important; }
+h2, h3 { color: #002142 !important; }
+[data-testid="stMetricLabel"] p { color: #8393a7 !important; }
+[data-testid="stMetricValue"] { color: #002142 !important; }
+.stTabs [data-baseweb="tab"] { color: #8393a7; }
+.stTabs [aria-selected="true"] { color: #004c97 !important; border-bottom-color: #004c97 !important; }
+</style>
+""", unsafe_allow_html=True)
+
 # ── Snowflake connection ──
 from snowflake.snowpark.context import get_active_session
 session = get_active_session()
 
-SEMANTIC_VIEW = "SAN_JAC_DEMO.CORTEX.SAN_JAC_ANALYTICS"
+SEMANTIC_MODEL_FILE = "@SAN_JAC_DEMO.CORTEX.ANALYST_STAGE/san_jac_analytics_semantic_model.yaml"
+LOGO_STAGE_PATH = "@SAN_JAC_DEMO.CORTEX.ANALYST_STAGE/san_jac_logo.png"
+
+# ── Logo: load from stage, fall back to web ──
+def _load_logo():
+    import base64
+    try:
+        data = session.file.get_stream(LOGO_STAGE_PATH).read()
+        return "data:image/png;base64," + base64.b64encode(data).decode()
+    except Exception:
+        return "https://upload.wikimedia.org/wikipedia/en/a/ab/San_Jacinto_College.png"
+
+LOGO_SRC = _load_logo()
 
 # ── Sidebar ──
 with st.sidebar:
     st.markdown(
-        """
+        f"""
         <div style="text-align:center; padding: 1rem 0;">
+            <img src="{LOGO_SRC}"
+                 style="width:110px; margin-bottom:0.5rem;" alt="San Jacinto College logo">
             <h2 style="color: #ffc61e; margin-bottom: 0;">San Jacinto College</h2>
-            <p style="color: #dfeaf4; font-size: 0.85rem; margin-top: 0.25rem;">Institutional Research Dashboard</p>
+            <p style="color: #ffffff; font-size: 0.85rem; margin-top: 0.25rem;">Institutional Research Dashboard</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -52,8 +96,8 @@ def campus_filter(alias="e", campus_col="CAMPUS_ID"):
 
 
 # ── Tab layout ──
-tab_kpi, tab_analyst, tab_lifecycle = st.tabs(
-    ["📈 KPI Overview", "💬 Ask the Data", "👥 Student Lifecycle"]
+tab_kpi, tab_analyst, tab_lifecycle, tab_student = st.tabs(
+    ["📈 KPI Overview", "💬 Ask the Data", "👥 Student Lifecycle", "🔍 Student Lookup"]
 )
 
 # ════════════════════════════════════════
@@ -121,7 +165,13 @@ with tab_kpi:
         ORDER BY t.START_DATE
         """
         trend = session.sql(trend_sql).to_pandas()
-        st.bar_chart(trend, x="TERM_NAME", y="HEADCOUNT")
+        import altair as alt
+        term_order = trend["TERM_NAME"].tolist()
+        chart = alt.Chart(trend).mark_bar(color="#004c97").encode(
+            x=alt.X("TERM_NAME:O", sort=term_order, title="Term"),
+            y=alt.Y("HEADCOUNT:Q", title="Students"),
+        ).properties(height=300)
+        st.altair_chart(chart, use_container_width=True)
 
     with col_demo:
         st.markdown("**Enrollment by Ethnicity**")
@@ -204,22 +254,26 @@ with tab_analyst:
 
         with st.container():
             with st.spinner("Analyzing..."):
-                analyst_sql = f"""
-                SELECT SNOWFLAKE.CORTEX.ANALYST(
-                    '{SEMANTIC_VIEW}',
-                    $${json.dumps([{{"role": "user", "content": [{{"type": "text", "text": user_msg}}]}}])}$$
-                ) AS response
-                """
-                result = session.sql(analyst_sql).collect()
+                import _snowflake
+                resp = _snowflake.send_snow_api_request(
+                    "POST",
+                    "/api/v2/cortex/analyst/message",
+                    {},
+                    {},
+                    {
+                        "messages": [{"role": "user", "content": [{"type": "text", "text": user_msg}]}],
+                        "semantic_model_file": SEMANTIC_MODEL_FILE,
+                    },
+                    None,
+                    30000,
+                )
 
             analyst_text = ""
             sql_query = None
             result_df = None
 
-            if result:
-                response = json.loads(result[0]["RESPONSE"])
-                message = response.get("message", {})
-                for item in message.get("content", []):
+            if resp["status"] < 400:
+                for item in json.loads(resp["content"]).get("message", {}).get("content", []):
                     if item.get("type") == "text":
                         analyst_text += item["text"] + "\n"
                     elif item.get("type") == "sql":
@@ -230,6 +284,8 @@ with tab_analyst:
                         result_df = session.sql(sql_query).to_pandas()
                     except Exception as e:
                         analyst_text += f"\n*Query error: {e}*"
+            else:
+                analyst_text = f"Cortex Analyst error ({resp['status']}): {resp['content']}"
 
             if analyst_text:
                 st.write(analyst_text.strip())
@@ -299,3 +355,121 @@ with tab_lifecycle:
         rb_days = int(rb_row["AVG_DAYS"].iloc[0]) if not rb_row.empty else 0
         st.metric("Recruit-Back Students", f"{rb_count:,}")
         st.caption(f"Average {rb_days} days stalled in registration")
+
+
+
+# ════════════════════════════════════════
+# TAB 5: Student Lookup
+# ════════════════════════════════════════
+with tab_student:
+    st.subheader("Individual Student Lookup")
+    st.caption("Search by student ID to view profile, enrollment history, course record, and stage progression.")
+
+    if "student_lookup_id" not in st.session_state:
+        st.session_state.student_lookup_id = None
+
+    with st.form("student_lookup_form"):
+        sc1, sc2 = st.columns([5, 1])
+        with sc1:
+            lookup_input = st.text_input("", placeholder="Enter student ID...", label_visibility="collapsed")
+        with sc2:
+            lookup_submitted = st.form_submit_button("Search", use_container_width=True)
+
+    if lookup_submitted and lookup_input:
+        st.session_state.student_lookup_id = lookup_input.strip().replace("'", "").replace(";", "")[:50]
+
+    if st.session_state.student_lookup_id and st.button("Clear", key="clear_student"):
+        st.session_state.student_lookup_id = None
+        st.experimental_rerun()
+
+    safe_id = st.session_state.student_lookup_id
+
+    if safe_id:
+        try:
+            profile_df = session.sql(
+                f"SELECT * FROM SAN_JAC_DEMO.ANALYTICS.DIM_STUDENT WHERE STUDENT_ID = '{safe_id}'"
+            ).to_pandas()
+        except Exception as e:
+            st.error(f"Error querying student profile: {e}")
+            profile_df = pd.DataFrame()
+
+        if profile_df.empty:
+            st.warning(f"No student found with ID: {safe_id}")
+        else:
+            row = profile_df.iloc[0]
+
+            st.markdown("#### Profile")
+            display_cols = [c for c in profile_df.columns if c != "STUDENT_ID"]
+            for chunk_start in range(0, len(display_cols), 4):
+                metric_cols = st.columns(4)
+                for j, col_name in enumerate(display_cols[chunk_start:chunk_start + 4]):
+                    val = row[col_name]
+                    metric_cols[j].metric(
+                        col_name.replace("_", " ").title(),
+                        str(val) if pd.notna(val) else "—",
+                    )
+
+            st.divider()
+
+            st.markdown("#### Enrollment History")
+            try:
+                enroll_df = session.sql(f"""
+                    SELECT t.TERM_NAME,
+                           e.TOTAL_SCH_ATTEMPTED, e.TOTAL_SCH_COMPLETED,
+                           c.CAMPUS_NAME, p.PROGRAM_NAME, p.AREA_OF_STUDY,
+                           CASE WHEN e.WITHDREW_TERM = TRUE THEN 'Yes' ELSE 'No' END AS WITHDREW,
+                           CASE WHEN e.IS_ONLINE_ONLY = TRUE THEN 'Yes' ELSE 'No' END AS ONLINE_ONLY
+                    FROM SAN_JAC_DEMO.ANALYTICS.FACT_ENROLLMENT e
+                    JOIN SAN_JAC_DEMO.ANALYTICS.DIM_TERM t ON e.TERM_ID = t.TERM_ID
+                    LEFT JOIN SAN_JAC_DEMO.ANALYTICS.DIM_CAMPUS c ON e.CAMPUS_ID = c.CAMPUS_ID
+                    LEFT JOIN SAN_JAC_DEMO.ANALYTICS.DIM_PROGRAM p ON e.PROGRAM_ID = p.PROGRAM_ID
+                    WHERE e.STUDENT_ID = '{safe_id}'
+                    ORDER BY t.START_DATE DESC
+                """).to_pandas()
+                if not enroll_df.empty:
+                    st.dataframe(enroll_df, use_container_width=True)
+                else:
+                    st.info("No enrollment records found.")
+            except Exception as e:
+                st.error(f"Could not load enrollment history: {e}")
+
+            st.divider()
+
+            st.markdown("#### Course History")
+            try:
+                course_df = session.sql(f"""
+                    SELECT t.TERM_NAME, ca.*
+                    FROM SAN_JAC_DEMO.ANALYTICS.FACT_COURSE_ATTEMPT ca
+                    JOIN SAN_JAC_DEMO.ANALYTICS.DIM_TERM t ON ca.TERM_ID = t.TERM_ID
+                    WHERE ca.STUDENT_ID = '{safe_id}'
+                    ORDER BY t.START_DATE DESC
+                """).to_pandas()
+                if not course_df.empty:
+                    drop_cols = [c for c in ["STUDENT_ID", "TERM_ID"] if c in course_df.columns]
+                    st.dataframe(course_df.drop(columns=drop_cols), use_container_width=True)
+                else:
+                    st.info("No course records found.")
+            except Exception as e:
+                st.error(f"Could not load course history: {e}")
+
+            st.divider()
+
+            st.markdown("#### Stage History")
+            try:
+                stage_df = session.sql(f"""
+                    SELECT ds.STAGE_NAME,
+                           ssh.STAGE_START_DATE, ssh.STAGE_END_DATE,
+                           COALESCE(ssh.DAYS_IN_STAGE,
+                               DATEDIFF('day', ssh.STAGE_START_DATE, CURRENT_DATE())) AS DAYS_IN_STAGE,
+                           CASE WHEN ssh.STAGE_END_DATE IS NULL THEN 'Current' ELSE 'Completed' END AS STATUS
+                    FROM SAN_JAC_DEMO.ANALYTICS.FACT_STUDENT_STAGE_HISTORY ssh
+                    JOIN SAN_JAC_DEMO.ANALYTICS.DIM_STAGE ds ON ssh.STAGE_ID = ds.STAGE_ID
+                    WHERE ssh.STUDENT_ID = '{safe_id}'
+                    ORDER BY ssh.STAGE_START_DATE DESC
+                """).to_pandas()
+                if not stage_df.empty:
+                    st.dataframe(stage_df, use_container_width=True)
+                else:
+                    st.info("No stage history found.")
+            except Exception as e:
+                st.error(f"Could not load stage history: {e}")

@@ -43,6 +43,7 @@ Rapid demo assets for showcasing Snowflake Cortex AI capabilities at San Jacinto
 |-------------|---------|
 | `docs/` | Source docs, demo narrative, use-case briefs (see below) |
 | `data/` | Synthetic seed data for the demo |
+| `streamlit/` | Streamlit in Snowflake app source code (see below) |
 
 > Cortex Search, Cortex Analyst, and Streamlit assets are built directly in Snowflake via Cortex Code.
 
@@ -72,6 +73,37 @@ Rapid demo assets for showcasing Snowflake Cortex AI capabilities at San Jacinto
 | `financial-aid-monitoring.md` | Financial aid gap and Pell eligibility monitoring |
 | `transfer-workforce-outcomes.md` | Transfer readiness and post-graduation outcomes |
 | `institutional-research-dashboard.md` | IR NL-to-SQL executive dashboard |
+
+### streamlit/
+
+Two Streamlit-in-Snowflake apps, deployed to `SAN_JAC_DEMO.CORTEX`.
+
+| App | Directory | Description |
+|-----|-----------|-------------|
+| **SAN_JAC_ADVISOR** | `streamlit/advisor/` | Dual-mode chatbot for academic advisors — Cortex Search over 1,773 document chunks (courses, programs, lifecycle, metrics) with RAG answer generation, plus Cortex Analyst for NL-to-SQL over student data |
+| **SAN_JAC_DASHBOARD** | `streamlit/dashboard/` | Institutional Research dashboard with KPI tiles (enrollment, FT rate, A-C success, withdrawal, Pell, online-only), enrollment trend and demographics charts, Cortex Analyst "Ask the Data" tab, and student lifecycle stage distribution |
+
+Each directory contains:
+- `streamlit_app.py` — app source code
+- `snowflake.yml` — Snowflake CLI deployment manifest
+
+#### Deploy
+
+```bash
+# Advisor chatbot
+cd streamlit/advisor
+snow streamlit deploy --replace
+
+# IR dashboard
+cd streamlit/dashboard
+snow streamlit deploy --replace
+```
+
+After deploying, grant access:
+```sql
+GRANT USAGE ON STREAMLIT SAN_JAC_DEMO.CORTEX.SAN_JAC_ADVISOR TO ROLE SAN_JAC_VIEWER;
+GRANT USAGE ON STREAMLIT SAN_JAC_DEMO.CORTEX.SAN_JAC_DASHBOARD TO ROLE SAN_JAC_VIEWER;
+```
 
 ---
 
